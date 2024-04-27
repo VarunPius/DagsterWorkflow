@@ -5,7 +5,10 @@ setup(
     packages=find_packages(exclude=["DagsterWorkflow_tests"]),
     install_requires=[
         "dagster",
-        "dagster-cloud"
+        "dagster-cloud",
+        "pandas",
+        "requests",
+        "yfinance"
     ],
     extras_require={"dev": ["dagster-webserver", "pytest"]},
 )
