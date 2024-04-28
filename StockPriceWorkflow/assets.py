@@ -40,7 +40,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 
-from dagster import asset, AssetExecutionContext
+from dagster import asset, AssetExecutionContext, MaterializeResult, MetadataValue
 from dagster import AssetSelection, define_asset_job
 
 
@@ -55,7 +55,7 @@ from dagster import AssetSelection, define_asset_job
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 @asset
-def get_stock_price(context: AssetExecutionContext) -> None:
+def get_stock_price(context: AssetExecutionContext) -> MaterializeResult:
     context.log.info("Getting Stock Price")
     tickers = [
                 'AAPL', 
@@ -98,7 +98,12 @@ def get_stock_price(context: AssetExecutionContext) -> None:
     result.to_csv('data/asset1.csv')
 
     context.log.info("Done")
-    return
+    return MaterializeResult(
+        metadata = {
+            "num_of_rows": len(result.index),
+            "preview": MetadataValue.md(result.head().to_markdown()),
+        }
+    )
 
 
 @asset(deps=[get_stock_price])
