@@ -40,7 +40,8 @@ import pandas as pd
 import requests
 import yfinance as yf
 
-from dagster import asset, AssetExecutionContext, MaterializeResult, MetadataValue
+from dagster import asset, AssetIn, AssetExecutionContext
+from dagster import MaterializeResult, MetadataValue
 from dagster import AssetSelection, define_asset_job
 
 
@@ -54,8 +55,8 @@ from dagster import AssetSelection, define_asset_job
 # Workflow definitions:
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
 
-@asset
-def get_stock_price(context: AssetExecutionContext) -> MaterializeResult:
+@asset(key="price_asset", group_name="grp_stock_agg")
+def get_stock_price(context: AssetExecutionContext) -> pd.DataFrame:
     context.log.info("Getting Stock Price")
     tickers = [
                 'AAPL', 
@@ -98,20 +99,21 @@ def get_stock_price(context: AssetExecutionContext) -> MaterializeResult:
     result.to_csv('data/asset1.csv')
 
     context.log.info("Done")
-    return MaterializeResult(
-        metadata = {
-            "num_of_rows": len(result.index),
-            "preview": MetadataValue.md(result.head().to_markdown()),
-        }
+    return result
+
+
+@asset(
+    ins={"upstream_df": AssetIn(key="price_asset")},
+    group_name="grp_stock_agg"
+    #deps=[get_stock_price]
     )
+def eval_stock_agg(context: AssetExecutionContext, upstream_df: pd.DataFrame) -> MaterializeResult:
 
-
-@asset(deps=[get_stock_price])
-def eval_stock_agg(context: AssetExecutionContext) -> None:
     context.log.info("Aggregation of stock price")
     
     context.log.info("Reading data:")
-    stock_price_df = pd.read_csv("data/asset1.csv")
+    #stock_price_df = pd.read_csv("data/asset1.csv")
+    stock_price_df = upstream_df
     
     context.log.info("Creating Groups")
     temp_output = stock_price_df.groupby('ticker').agg({'Close': 'mean'})
@@ -123,6 +125,11 @@ def eval_stock_agg(context: AssetExecutionContext) -> None:
     
     context.log.info("Writing the data to asset 2:")
     agg_output.to_csv('data/asset2.csv')
-    return
+    return MaterializeResult(
+        metadata = {
+            "num_of_companies": len(agg_output.index),
+            "preview": MetadataValue.md(agg_output.head().to_markdown()),
+        }
+    )
 
 
