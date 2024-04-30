@@ -16,6 +16,7 @@
 #   v2.0.0   | StockPriceWorkflow: Calculating stock price aggregates                                                                                #
 #   v3.0.0   | StockPriceWorkflow: Creating jobs                                                                                                     #
 #   v4.0.0   | StockPriceWorkflow: Changing assets to pass dataframe between assets                                                                  #
+#   v5.0.0   | StockPriceWorkflow: Final version if multiple jobs, assets configured                                                                 #
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 

@@ -25,6 +25,7 @@
 
 # System Libraries
 # Internal imports
+from . import assets as assets
 from .assets import stock_price_assets
 
 
@@ -34,7 +35,8 @@ from dagster import (
     Definitions,
     ScheduleDefinition,
     define_asset_job,
-    load_assets_from_modules
+    load_assets_from_modules,
+    load_assets_from_package_module
 )
 
 
@@ -42,8 +44,10 @@ from dagster import (
 # Workflow definitions:
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
 
-assets_all = load_assets_from_modules([stock_price_assets])
-assets_stock_price = [stock_price_assets.get_stock_price, stock_price_assets.eval_stock_agg]
+assets_all = load_assets_from_package_module(assets)
+assets_stock_price = load_assets_from_modules([stock_price_assets])
+#assets_stock_price = [stock_price_assets.get_stock_price, stock_price_assets.eval_stock_agg]
+
 
 # Addition: define a job that will materialize the assets
 job_all = define_asset_job("job_all", selection=AssetSelection.all())
