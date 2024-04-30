@@ -16,6 +16,8 @@
 #   v2.0.0   | StockPriceWorkflow: Calculating stock price aggregates                                                                                #
 #   v3.0.0   | StockPriceWorkflow: Creating jobs                                                                                                     #
 #   v4.0.0   | StockPriceWorkflow: Changing assets to pass dataframe between assets                                                                  #
+#   v5.0.0   | StockPriceWorkflow: Adding Directory structures                                                                                       #
+#   v5.0.1   | StockPriceWorkflow: Cleaning directory structures and package mgmt                                                                    #
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 
@@ -26,7 +28,9 @@
 # System Libraries
 # Internal imports
 from . import assets as assets
-from .assets import stock_price_assets
+#from .assets import stock_price_assets     # won't be necessary as whole package is imported in preceding line
+                                            # This will just import one module
+                                            # will get lengthy when too many modules under `assets` package
 
 
 # External librabries
@@ -44,16 +48,27 @@ from dagster import (
 # Workflow definitions:
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
 
+# Asset definitions:
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
 assets_all = load_assets_from_package_module(assets)
-assets_stock_price = load_assets_from_modules([stock_price_assets])
-#assets_stock_price = [stock_price_assets.get_stock_price, stock_price_assets.eval_stock_agg]
+assets_stock_price = load_assets_from_modules([assets.stock_price_assets])
+assets_stock_price_alt = [assets.stock_price_assets.get_stock_price, assets.stock_price_assets.eval_stock_agg]
+'''
+Preferably, create `assets_all` and should be all. One line will import all assets from `assets` module.
+Then in the jobs, define what assets you need either with the help of `groups` or just pass a list for `selection`
+Check how imports are done.
+We either import file names for which you use -> load_assets_from_modules
+If you import the whole package (here, `assets` directory) instead of just a module(file) from the packages, use -> load_assets_from_package_module
+'''
 
 
-# Addition: define a job that will materialize the assets
+# Job definitions:
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
+# Define a job that will materialize the assets
 job_all = define_asset_job("job_all", selection=AssetSelection.all())
 job_all_alt = define_asset_job("job_all", selection=assets_all)
 job_stock_agg = define_asset_job("job_stock_agg", selection=AssetSelection.groups("grp_stock_agg"))
-job_stock_price_hist = define_asset_job("job_stock_hist", selection=[stock_price_assets.get_stock_price])
+job_stock_price_hist = define_asset_job("job_stock_hist", selection=[assets.stock_price_assets.get_stock_price])
 
 
 defs = Definitions(
