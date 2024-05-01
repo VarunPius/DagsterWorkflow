@@ -59,6 +59,17 @@ Then in the jobs, define what assets you need either with the help of `groups` o
 Check how imports are done.
 We either import file names for which you use -> load_assets_from_modules
 If you import the whole package (here, `assets` directory) instead of just a module(file) from the packages, use -> load_assets_from_package_module
+
+Note: load_assets_from_package_module returns an iterable list.
+    Sometimes you are returning assets from other sources such as dbt using load_assets_from_dbt_cloud_job.
+    Now, load_assets_from_dbt_cloud_job doesn't return a iterable, but CacheableAssetsDefinition
+    In this scenario you add this to the iterable list because you definitions either needs an iterable or a single Asset Definition
+    so do something like this:
+    dbt_cloud_assets = load_assets_from_dbt_cloud_job(
+        dbt_cloud=dbt_cloud_instance, job_id = job_id)
+    assets_all = load_assets_from_package_module(assets)
+    assets_all.append(dbt_cloud_assets)
+    Here, we are simply adding dbt_cloud_assets to the assets_all iterable
 '''
 
 
